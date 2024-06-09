@@ -1,0 +1,439 @@
+{
+	"info": {
+		"_postman_id": "75759057-7c9a-4a2b-9433-06d7ca8b378b",
+		"name": "Library",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "13258337"
+	},
+	"item": [
+		{
+			"name": "AddBook",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const respData = pm.response.json()\r",
+							"const reqData = pm.request.body.raw\r",
+							"let id_book_val\r",
+							"const schema = {\r",
+							"  \"type\": \"object\",\r",
+							"  \"properties\": {\r",
+							"    \"Msg\": {\r",
+							"      \"type\": \"string\"\r",
+							"    },\r",
+							"    \"ID\": {\r",
+							"      \"type\": \"string\"\r",
+							"    }\r",
+							"  },\r",
+							"  \"required\": [\r",
+							"    \"Msg\",\r",
+							"    \"ID\"\r",
+							"  ]\r",
+							"}\r",
+							"\r",
+							"pm.test(\"Header validation\", function(){\r",
+							"    pm.expect(pm.response.to.have.header(\"Content-Type\"))\r",
+							"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\")\r",
+							"    pm.expect(pm.response.headers.get(\"Access-Control-Allow-Methods\")).to.have.contain(\"POST\")\r",
+							"})\r",
+							"\r",
+							"pm.test(\"Data driven\", function(){\r",
+							"    pm.collectionVariables.set(\"name_book\", pm.iterationData.get(\"Book\"))\r",
+							"    pm.collectionVariables.set(\"author_book\", pm.iterationData.get(\"Author\"))\r",
+							"})\r",
+							"\r",
+							"pm.test(\"response status check\", function(){\r",
+							"try{\r",
+							"    pm.response.to.have.status(200)\r",
+							"    saveResponse()\r",
+							"    pm.expect(respData.Msg).to.have.eql(\"successfully added\")\r",
+							"}catch(err){\r",
+							"    if(respData.Msg.includes(\"Exists\")){\r",
+							"        console.log(\"inside Exists\")\r",
+							"        cleanupScript()\r",
+							"    }\r",
+							"}\r",
+							"})\r",
+							"\r",
+							"function cleanupScript(){\r",
+							"    console.log(\"inside cleanupScript\")\r",
+							"    pm.execution.setNextRequest(\"DeleteBook\")\r",
+							"}\r",
+							"\r",
+							"function saveResponse(){\r",
+							"    pm.collectionVariables.set(\"id_book\", respData.ID)\r",
+							"    console.log(pm.collectionVariables.get(\"id_book\"))   \r",
+							"}\r",
+							"\r",
+							"pm.test(\"schema validation\", function(){\r",
+							"    pm.response.to.have.jsonSchema(schema)\r",
+							"})"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.collectionVariables.set(\"aisle_book\", pm.variables.replaceIn('{{$randomInt}}'))"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n\"name\":\"{{name_book}}\",\r\n\"isbn\":\"{{isbn_book}}\",\r\n\"aisle\":\"{{aisle_book}}\",\r\n// \"aisle\":\"643\",\r\n\"author\":\"{{author_book}}\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url1}}/Library/Addbook.php",
+					"host": [
+						"{{base_url1}}"
+					],
+					"path": [
+						"Library",
+						"Addbook.php"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetBook",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const reqData = pm.request.body.raw\r",
+							"const respData = pm.response.json()\r",
+							"const schema = {\r",
+							"  \"type\": \"array\",\r",
+							"  \"items\": [\r",
+							"    {\r",
+							"      \"type\": \"object\",\r",
+							"      \"properties\": {\r",
+							"        \"book_name\": {\r",
+							"          \"type\": \"string\"\r",
+							"        },\r",
+							"        \"isbn\": {\r",
+							"          \"type\": \"string\"\r",
+							"        },\r",
+							"        \"aisle\": {\r",
+							"          \"type\": \"string\"\r",
+							"        },\r",
+							"        \"author\": {\r",
+							"          \"type\": \"string\"\r",
+							"        }\r",
+							"      },\r",
+							"      \"required\": [\r",
+							"        \"book_name\",\r",
+							"        \"isbn\",\r",
+							"        \"aisle\",\r",
+							"        \"author\"\r",
+							"      ]\r",
+							"    }\r",
+							"  ]\r",
+							"}\r",
+							"\r",
+							"pm.test(\"Response validation\", function(){\r",
+							"    pm.expect(pm.collectionVariables.get(\"id_book\")).to.have.eql(respData[0].isbn+respData[0].aisle)\r",
+							"})\r",
+							"\r",
+							"pm.test(\"Schema validation\", function(){\r",
+							"    pm.response.to.have.jsonSchema(schema)\r",
+							"})\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url1}}/Library/GetBook.php?ID={{id_book}}",
+					"host": [
+						"{{base_url1}}"
+					],
+					"path": [
+						"Library",
+						"GetBook.php"
+					],
+					"query": [
+						{
+							"key": "ID",
+							"value": "{{id_book}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteBook",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const reqData = pm.request.body.raw\r",
+							"const respData = pm.response.json()\r",
+							"const schema = {\r",
+							"  \"type\": \"object\",\r",
+							"  \"properties\": {\r",
+							"    \"msg\": {\r",
+							"      \"type\": \"string\"\r",
+							"    }\r",
+							"  },\r",
+							"  \"required\": [\r",
+							"    \"msg\"\r",
+							"  ]\r",
+							"}\r",
+							"\r",
+							"pm.test(\"Response validation\", function(){\r",
+							"    try{\r",
+							"    pm.response.to.have.status(200)\r",
+							"    pm.expect(respData.msg).to.have.include(\"successfully\")\r",
+							"    }catch(err){\r",
+							"        if(respData.msg.includes(\"exists\")){\r",
+							"            pm.execution.setNextRequest(\"AddBook\")\r",
+							"        }\r",
+							"    }\r",
+							"})\r",
+							"\r",
+							"pm.test(\"Schema validation\", function(){\r",
+							"    pm.response.to.have.jsonSchema(schema)\r",
+							"})"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \r\n\"ID\" : \"{{id_book}}\"\r\n} \r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url1}}/Library/DeleteBook.php",
+					"host": [
+						"{{base_url1}}"
+					],
+					"path": [
+						"Library",
+						"DeleteBook.php"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetBeeceptor",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const respData = pm.response.json()\r",
+							"const reqData = pm.request.body.raw\r",
+							"let mapDataComplete = new Map()\r",
+							"const schema = {\r",
+							"  \"type\": \"array\",\r",
+							"  \"items\": [\r",
+							"    {\r",
+							"      \"type\": \"object\",\r",
+							"      \"properties\": {\r",
+							"        \"id\": {\r",
+							"          \"type\": \"integer\"\r",
+							"        },\r",
+							"        \"name\": {\r",
+							"          \"type\": \"string\"\r",
+							"        },\r",
+							"        \"company\": {\r",
+							"          \"type\": \"string\"\r",
+							"        },\r",
+							"        \"username\": {\r",
+							"          \"type\": \"string\"\r",
+							"        },\r",
+							"        \"email\": {\r",
+							"          \"type\": \"string\"\r",
+							"        },\r",
+							"        \"address\": {\r",
+							"          \"type\": \"string\"\r",
+							"        },\r",
+							"        \"zip\": {\r",
+							"          \"type\": \"string\"\r",
+							"        },\r",
+							"        \"state\": {\r",
+							"          \"type\": \"string\"\r",
+							"        },\r",
+							"        \"country\": {\r",
+							"          \"type\": \"string\"\r",
+							"        },\r",
+							"        \"phone\": {\r",
+							"          \"type\": \"string\"\r",
+							"        },\r",
+							"        \"photo\": {\r",
+							"          \"type\": \"string\"\r",
+							"        }\r",
+							"      },\r",
+							"      \"required\": [\r",
+							"        \"id\",\r",
+							"        \"name\",\r",
+							"        \"company\",\r",
+							"        \"username\",\r",
+							"        \"email\",\r",
+							"        \"address\",\r",
+							"        \"zip\",\r",
+							"        \"state\",\r",
+							"        \"country\",\r",
+							"        \"phone\",\r",
+							"        \"photo\"\r",
+							"      ]\r",
+							"    }\r",
+							"  ]\r",
+							"}\r",
+							"\r",
+							"\r",
+							"pm.test(\"validate response\", function(){\r",
+							"    for(let i=0; i<respData.length; i++){\r",
+							"        let mapData = new Map()\r",
+							"        console.log(respData[i])\r",
+							"        mapData.set(\"id\", respData[i].id)\r",
+							"        mapData.set(\"name\", respData[i].name)\r",
+							"        mapData.set(\"company\", respData[i].company)\r",
+							"        mapData.set(\"username\", respData[i].username)\r",
+							"        mapData.set(\"email\", respData[i].email)\r",
+							"        mapData.set(\"address\", respData[i].address)\r",
+							"        mapData.set(\"zip\", respData[i].zip)\r",
+							"        mapDataComplete.set(i, mapData)\r",
+							"}\r",
+							"\r",
+							"    mapDataComplete.forEach(function(key, value){\r",
+							"        key.forEach(function(key, value){\r",
+							"            console.log(value + \" \" + key)\r",
+							"        })\r",
+							"    })\r",
+							"})\r",
+							"\r",
+							"pm.test(\"Schema validations\", function(){\r",
+							"    pm.response.to.have.jsonSchema(schema)\r",
+							"})\r",
+							"\r",
+							"pm.test(\"Header validation\", function(){\r",
+							"    pm.response.to.have.header(\"Content-Type\")\r",
+							"})"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "https://fake-json-api.mock.beeceptor.com/users",
+					"protocol": "https",
+					"host": [
+						"fake-json-api",
+						"mock",
+						"beeceptor",
+						"com"
+					],
+					"path": [
+						"users"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "id_book",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "isbn_book",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "aisle_book",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "name_book",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "author_book",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "flag",
+			"value": "false",
+			"type": "string"
+		}
+	]
+}
